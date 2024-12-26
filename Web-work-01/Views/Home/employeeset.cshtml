@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "人員設定";
+}
+<div class="container mt-5">
+    <h2 class="mb-4">人員設定</h2>
+    <table class="table table-bordered table-hover" id="employeeTable">
+        <thead class="table-light">
+            <tr>
+                <th>人員名稱</th>
+                <th>密碼</th>
+                <th>所屬部門</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            <tr>
+                <td>
+                    <input type="text" class="form-control" id="employeeName" placeholder="請輸入人員名稱" />
+                </td>
+                <td>
+                    <input type="text" class="form-control" id="password" placeholder="請輸入密碼" />
+                </td>
+                <td>
+                    <select class="form-control" id="departmentSelect">
+                        <!-- 下拉選單會動態填充部門選項 -->
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-primary" id="saveButton">新增</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        // 请求部门数据
+        $.ajax({
+            url: '/api/Department/Departments',  // 调用 API 获取部门数据
+            type: 'GET',
+            dataType: 'json',
+            success: function (departments) {
+
+                // 清空现有的下拉选项
+                $('#departmentSelect').empty();
+                $('#departmentSelect').append('<option value="">請選擇部門</option>');
+
+                // 填充部门数据到下拉菜单
+                departments.forEach(function(department) {
+                    $('#departmentSelect').append(
+                        `<option value="${department.departmentId}">${department.department}</option>`
+                    );
+                });
+            },
+            error: function (xhr, status, error) {
+                console.log("請求部門數據失敗：", error);
+            }
+        });
+    });
+    // 表单提交事件
+    $('#saveButton').click(function () {
+        const employeeName = $('#employeeName').val();
+        const password = $('#password').val();
+        const departmentSelect = $('#departmentSelect').val();
+
+        console.log("數據：", employeeName,password,departmentSelect);
+        if (!employeeName || !password || !departmentSelect) {
+            alert('所有字段都必須填寫');
+            return;
+        }
+        const employeeData = {
+            Name: employeeName,
+            Password: password,
+            Departmentid: departmentSelect
+        };
+        $.ajax({
+            url: '/api/Employee/AddEmployee',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(employeeData),
+            success: function (response) {
+                $('#message').text(response.message);
+                alert('新增成功: ' + response.message);
+                location.reload();
+            },
+            error: function (xhr, status, error) {
+                var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : '保存失败';
+                $('#message').text(errorMessage);
+                alert('新增失敗: ' + errorMessage);
+            }
+        });
+    });
+</script>

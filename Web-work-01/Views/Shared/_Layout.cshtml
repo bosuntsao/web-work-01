@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Web_work_01</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <script src="/js/jquery.min.js"></script>    
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <script src="~/js/bootstrap.bundle.min.js"></script>
+
+    
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Loginview">Web_work_01</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item-dropdown">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="loginview">首頁</a>
+                        </li>
+                        <li class="nav-item-dropdown">
+                            <a class="nav-link text-dark" href="javascript:void(0)" onclick="redirectToemployeeSet()">人員設定</a>                            
+                        </li>
+                        <li class="nav-item-dropdown">
+                            <a class="nav-link text-dark" href="javascript:void(0)" onclick="loadEmployeeDepartment()">人員部門列表</a>
+                            <ul>
+                                <li><a href="/employeedepartmentcol/departmentlist">部門列表</a></li>
+                                <li><a href="/employeedepartmentcol/departmentlist/departmentset">部門設定</a></li>
+                            </ul>
+                         </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="login">
+                <div class="login-info">
+                    <div class="user-info">
+                    <span>登入人員: <strong>@ViewBag.Name</strong></span>
+                </div><br />
+                <div class="department-info">
+                    <span>部門: <strong>@ViewBag.department</strong></span>
+                </div>
+                    <form asp-controller="Home" asp-action="Logout" method="post">
+                        <button type="submit" class="logout-button">登出</button>
+                    </form>
+                </div>
+            </div>            
+        </nav>        
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2024 - Web_work_01 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+<script>
+
+    function redirectToemployeeSet() {
+
+        $.ajax({
+            url: '/api/Department', // 對應的 Controller 和方法
+            type: 'GET', // 請求類型，這裡是 GET
+            dataType:"json",
+            success: function (response) {
+                console.log("部门数据加载成功：", response);
+                // 將伺服器返回的 HTML 或資料插入到頁面中
+                //$('#employeedepartmentContent').html(response);
+                window.location.href = "/Home/employeeset";
+            },
+            error: function (xhr, status, error) {
+                // 處理錯誤
+                console.error("發生錯誤：" + error);
+                alert("無法加載資料，請稍後再試！");
+            }
+        });
+    }
+</script>
+
+<script>
+
+    function loadEmployeeDepartment() {
+        // 使用 Ajax 發送請求
+        $.ajax({
+            url: '/api/Employeedepartment/Getemployeedepartmentcol', // 對應的 Controller 和方法
+            type: 'GET', // 請求類型，這裡是 GET
+            dataType:"json",
+            success: function (response) {
+                // 將伺服器返回的 HTML 或資料插入到頁面中
+                window.location.href = "/Home/employeedepartmentcol";
+            },
+            error: function (xhr, status, error) {
+                // 處理錯誤
+                console.error("發生錯誤：" + error);
+                alert("無法加載資料，請稍後再試！");
+            }
+        });
+    }
+</script>

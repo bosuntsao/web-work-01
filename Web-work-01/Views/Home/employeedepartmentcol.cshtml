@@ -1,0 +1,269 @@
+﻿@{
+    ViewData["Title"] = "人員部門列表";
+}
+<link rel="stylesheet" href="~/css/modal.css">
+<link rel="stylesheet" type="text/css" href="~/css/employee.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <!-- 功能選單 -->
+    @* <nav class="menu">
+        <ul>            
+            <li><a href="javascript:void(0)" onclick="loadDepartmentlist()">部門列表</a></li>
+        </ul>
+    </nav> *@
+
+    <div class="container mt-5">
+        <h2 class="mb-4">人員部門列表</h2>
+        <table class="table table-bordered table-hover" id="employeeTable">
+            <thead class="table-light">
+                <tr>
+                    <th>人員</th>
+                    <th>所屬部門</th>
+                    <th>編輯</th>
+                    <th>刪除</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 資料將由 JavaScript 動態生成 -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 引入 Bootstrap JS 和 Icons -->
+    @* <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.js"></script> *@
+
+    <!-- 遮罩 -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+
+    <!-- 彈窗：部門編輯 -->
+    <div class="modal" id="editModal">
+        <div class="modal-header" id="editModal">
+            <h3>部門編輯</h3>            
+        </div>
+        <div id="editForm">
+            <label>部門:</label>
+            <select id="department" name="department" class="form-control"></select>
+            <button type="button" id="saveBtn">儲存</button>
+            <button type="button" class="close-btn" onclick="closeEditModal()">×</button>
+        </div>
+    </div>
+</body>
+</html>
+
+<script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/Employeedepartment/Getemployeedepartmentcol')
+            .then(response => response.json())
+            .then(employees => {
+                console.log(employees); // 確認資料
+                renderEmployeeTable(employees); // 渲染表格
+            })
+            .catch(error => {
+                console.error('Error fetching employee data:', error);
+            });
+    });
+
+        function renderEmployeeTable(employees) {
+      const tableBody = document.getElementById('employeeTable').querySelector('tbody');
+
+      // 清空現有表格內容
+      tableBody.innerHTML = '';
+      employees.forEach(employee => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+              <td>${employee.name}</td>
+              <td>${employee.department}</td>
+              <td></td>
+              <td></td>`;
+
+        // 編輯按鈕
+        let btn = document.createElement('button');
+        let currentEmployee = null;
+        btn.classList = "btn btn-danger";
+        btn.innerText = "編輯";
+        btn.addEventListener("click", e => {
+            document.getElementById('editModal').style.display = 'block';
+            populateDepartmentDropdown(employee);
+            currentEmployee = { ...employee };
+            document.getElementById('saveBtn').addEventListener('click', () => {
+                saveEdit(currentEmployee);
+            });
+        });
+        row.querySelectorAll("td")[2].appendChild(btn);
+
+        // 刪除按鈕
+        let deletebtn = document.createElement('button');
+        deletebtn.classList = "btn btn-danger";
+        deletebtn.innerText = "刪除";
+        deletebtn.addEventListener("click", e => {
+            fetch(`/api/employee/delete/${employee.name}`, { method: 'DELETE' })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`刪除失敗: ${response.status} ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(() => {
+                    console.log(`人員 ${employee.name} 已刪除`);
+                    // 刪除按鈕成功後，重新加載表格
+                    renderEmployeeTable(employees.filter(e => e.name !== employee.name));
+                })
+                .catch(error => console.error('刪除失敗:', error.message));
+        });
+        row.querySelectorAll("td")[3].appendChild(deletebtn);
+
+        tableBody.appendChild(row);
+      });
+    }
+
+    function redirectToDepartmentSet() {
+        window.location.href = "/Home/departmentcol";
+    }
+
+    function DepartmentEdit() {
+        // 使用 Ajax 發送請求
+        $.ajax({
+            url: '/api/Employeedepartment', // 對應的 Controller
+            type: 'GET', // 請求類型，這裡是 GET
+            dataType:"json",
+            success: function (response) {
+                // 將伺服器返回的 HTML 或資料插入到頁面中
+                $('#employeedepartmentContent').html(response);
+                window.location.href = "/Home/employeedepartmentcol";
+            },
+            error: function (xhr, status, error) {
+                // 處理錯誤
+                console.error("發生錯誤：" + error);
+                alert("無法加載資料，請稍後再試！");
+            }
+        });
+    }
+        // 渲染部門下拉選單
+    function populateDepartmentDropdown(employee) {
+      const departmentDropdown = document.getElementById('department');
+
+        fetch('/api/department') // 後端 API URL
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('無法獲取部門列表');
+          }
+          return response.json(); // 假設後端返回 JSON 格式
+    })
+    .then(departmentList => {
+
+      // 清空下拉選單的內容
+      departmentDropdown.innerHTML = '';
+
+      // 添加 "請選擇部門" 項
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '請選擇部門';
+      departmentDropdown.appendChild(defaultOption);
+
+      // 填充下拉選單的部門列表
+      departmentList.forEach(department => {
+        const option = document.createElement('option');
+        option.value = department.departmentId; // 假設部門有唯一的 ID
+        option.textContent = department.departmentName; // 假設部門有名稱欄位
+
+        // 如果部門與員工的部門一致，將其設為選中
+        if (department.departmentId === employee.department) {
+          option.selected = true;
+        }
+
+        departmentDropdown.appendChild(option);
+      });
+    })
+    .catch(error => {
+      console.error('獲取部門列表失敗:', error);
+      alert('無法載入部門列表，請稍後再試');
+    });
+    }
+
+    function saveEdit(employee) {
+      const selectedDepartment = document.getElementById('department').value;
+      
+      console.log('新部門:', selectedDepartment);
+      const employeeName = employee.name;
+      const updateData = {
+        DepartmentID: selectedDepartment,
+        name: employeeName
+      };
+      //發送 PUT 或 PATCH 請求至後端 API
+      fetch(`/api/Employeedepartment/${employeeName}`, {
+        method: 'PUT', // 使用 PUT 方法來更新
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('儲存更新失敗');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('更新成功:', data);
+          alert('部門更新成功！');
+          closeEditModal();
+          location.reload();
+        })
+        .catch(error => {
+          console.error('儲存失敗:', error);
+          alert('更新失敗，請稍後重試');
+        });
+    }
+
+    //     $('#loadDepartmentlist').on('click', function () {
+            
+    //     loadDepartmentlist();
+    // });
+    // function loadDepartmentlist() {
+    //     // 使用 Ajax 發送請求
+    //     $.ajax({
+    //         url: '/api/Department/departmentlist', // 對應的 Controller 和方法
+    //         type: 'GET', // 請求類型，這裡是 GET
+    //         dataType:"json",
+    //         success: function (response) {
+    //             window.location.href = "/employeedepartmentcol/departmentlist";
+    //         },
+    //         error: function (xhr, status, error) {
+    //             // 處理錯誤
+    //             console.error("發生錯誤：" + error);
+    //             alert("無法加載資料，請稍後再試！");
+    //         }
+    //     });
+    // }
+</script>
+<script>
+// 打開彈窗部門編輯
+function openModaledit() {
+    document.getElementById("modalOverlay").style.display = "block";
+    document.getElementById("modaledit").style.display = "block";
+}
+
+    function closeEditModal() {
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'none';
+    }
+
+// 打開彈窗部門列表
+function openModalcol() {
+    document.getElementById("modalOverlay").style.display = "block";
+    document.getElementById("modalcol").style.display = "block";
+}
+
+// 關閉彈窗
+function closeModalcol() {
+    document.getElementById("modalOverlay").style.display = "none";
+    document.getElementById("modalcol").style.display = "none";
+}
+    </script>
+
+

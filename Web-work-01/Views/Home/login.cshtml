@@ -1,0 +1,58 @@
+﻿@{
+    Layout = "~/Views/Shared/_Login.cshtml";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="~/js/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="~/css/Login.css">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sign In</title>
+</head>
+<body>
+    <div class="login-box">
+        <h2 id="title">Sign In</h2>
+        <form id="loginForm">
+            <label for="name">帳號：</label>
+            <input type="text" id="name" name="name" required><br>
+            <label for="password">密碼：</label>
+            <input type="password" id="password" name="password" required><br><br>
+            <button type="submit">登入</button>
+        </form>
+        <div id="message"></div>
+   </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+
+                const data = {
+                    Name: $('#name').val(),
+                    Password: $('#password').val()
+                };
+
+                $.ajax({
+                    url: '/api/Login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    dataType:"json",
+                    data: JSON.stringify(data),
+                    success: function (response) {
+                        $('#message').text(response.message);
+                        if (response.result) {
+                            // 可進行跳轉
+                           window.location.href = "/Home/Loginview";
+                        }
+                    },
+                    error: function (xhr) {
+                        var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : '登入失敗';
+                        $('#message').text(errorMessage);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

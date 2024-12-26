@@ -1,0 +1,45 @@
+﻿body {
+    background: linear-gradient(90deg, #5936 0%, #362a84 100%);    
+}
+html {
+    font-family: Arial, sans-serif;
+    display: flex; /*使用 Flexbox 排版*/
+    justify-content: center; /* 水平置中 */
+    align-items: center; /* 垂直置中 */
+}
+.title {
+    text-align: center;
+}
+.login-box {
+    background: #fff;
+    width: 400px;
+    padding: 100px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 陰影效果 */
+    /*text-align: center;*/
+    display: inline-block;
+}
+    .login-box input {
+        width: 100%;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .login-box button {
+        width: 100%;
+        padding: 10px;
+        background-color: #2575fc;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+        /* 按鈕懸停效果 */
+        .login-box button:hover {
+            background-color: #1a5fda;
+        }

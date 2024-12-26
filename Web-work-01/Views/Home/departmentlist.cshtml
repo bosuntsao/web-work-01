@@ -1,0 +1,166 @@
+﻿<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登入</title>    
+</head>
+@{
+    ViewData["Title"] = "部門列表";
+}
+<link rel="stylesheet" href="~/css/modal.css">
+<link rel="stylesheet" type="text/css" href="~/css/employee.css">
+<!DOCTYPE html>
+<body>
+    @* <nav class="menu">
+        <ul>
+            <li><a href="javascript:void(0)" onclick="redirectToDepartmentSet()">部門設定</a></li>
+        </ul>
+    </nav> *@
+    <div class="container mt-5">
+        <h2 class="mb-4">部門列表</h2>
+        <table class="table table-bordered table-hover" id="departmentTable">
+            <thead class="table-light">
+                <tr>
+                    <th>部門編號</th>
+                    <th>部門</th>
+                    <th>編輯</th>
+                    <th>刪除</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 資料將由 JavaScript 動態生成 -->
+            </tbody>
+        </table>
+    </div>
+    <!-- 彈窗：部門編輯 -->
+    <div class="modal" id="editModal">
+        <div class="modal-header" id="editModal">
+            <h3>部門編輯</h3>
+        </div>
+        <div id="editForm">
+            <label>部門:</label>
+            <input type="text" id="departmentName" name="departmentName" class="form-control">            
+            <button type="button" id="saveBtn">儲存</button>
+            <button type="button" class="close-btn" onclick="closeModal()">×</button>
+        </div>
+    </div>
+    </body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/department/departmentlist')
+            .then(response => response.json())
+            .then(departments => {
+                renderDepartmentTable(departments); // 渲染表格
+            })
+            .catch(error => {
+                console.error('Error fetching department data:', error);
+            });
+    });
+
+    function renderDepartmentTable(departments)
+    {
+        const tableBody = document.getElementById('departmentTable').querySelector('tbody');
+        tableBody.innerHTML = '';
+
+        departments.forEach(department => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${department.departmentId}</td>
+                <td>${department.department}</td>
+                <td></td>
+                <td></td>
+                `;
+            //編輯
+            let btn = document.createElement('button');
+            btn.classList = "btn btn-danger";
+            btn.innerText = "編輯";
+            btn.addEventListener("click", e => {
+                document.getElementById('editModal').style.display = 'block';
+                departmenttext(department);
+                document.getElementById('saveBtn').addEventListener('click', () => {
+               saveEdit(department);
+                });
+            });
+            row.querySelectorAll("td")[2].appendChild(btn);
+            //刪除
+            let deletebtn = document.createElement('button');
+            deletebtn.classList = "btn btn-danger";
+            deletebtn.innerText = "刪除";
+            deletebtn.addEventListener("click", e => {
+                departmenttext(department); 
+                    fetch(`/api/department/delete/${department.departmentId}`, { method: 'DELETE' })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`刪除失敗: ${response.status} ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(() => {
+                            console.log(`部門 ${department.departmentId} 已刪除`);
+                            // 刪除按鈕成功後，重新加載表格
+                            renderDepartmentTable(departments.filter(d => d.departmentId !== department.departmentId));
+                        })
+                        .catch(error => console.error('刪除失敗:', error.message));
+                });
+            //});
+            row.querySelectorAll("td")[3].appendChild(deletebtn);
+            tableBody.appendChild(row);
+        });
+    }    
+
+    function saveEdit(department) {
+        const DepartmentID = department.departmentId;
+        const updateData = {
+            DepartmentID: department.DepartmentID,
+            Department: document.getElementById('departmentName').value
+        };
+        //發送 PUT 或 PATCH 請求至後端 API
+        fetch(`/api/Department/${DepartmentID}`, {
+            method: 'PUT', // 使用 PUT 方法來更新
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('儲存更新失敗');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('更新成功:', data);
+            alert('部門更新成功！');
+            closeEditModal(); // 關閉彈窗
+            location.reload();
+        });
+    }
+
+    function redirectToDepartmentSet() {
+        $.ajax({
+            url: '/api/Department/departments', // 對應的 Controller 和方法
+            type: 'GET', // 請求類型，這裡是 GET
+            dataType: "json",
+            success: function (response) {
+                console.log("部门数据加载成功：", response);
+                window.location.href = "/employeedepartmentcol/departmentlist/departmentset";
+            },
+            error: function (xhr, status, error) {
+                console.error("發生錯誤：" + error);
+                alert("無法加載資料，請稍後再試！");
+            }
+        });
+    }
+    function closeModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function departmenttext(department) {
+        document.getElementById('departmentName').value = department.department;
+    }
+    function closeEditModal() {
+        const modal = document.getElementById('editModal');
+        modal.style.display = 'none';
+    }
+</script>
+

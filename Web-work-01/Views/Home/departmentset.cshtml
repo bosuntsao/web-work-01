@@ -1,0 +1,130 @@
+﻿@{
+    ViewData["Title"] = "部門設定";
+}
+<div class="container mt-5">
+    <h2 class="mb-4">部門設定</h2>
+    <table class="table table-bordered table-hover" id="employeeTable">
+        <thead class="table-light">
+            <tr>
+                <th>部門</th>   
+                <th>上層部門</th>
+                <th>層級</th>
+            </tr>
+            
+        </thead>
+        <tbody>
+
+            <tr>
+                <td>
+                    <input type="text" class="form-control" id="departmentName" placeholder="請輸入部門名稱" />
+                </td>
+                <td>
+                    <select class="form-control" id="departmentSelect">
+                        <!-- 下拉選單會動態填充部門選項 -->
+                    </select>
+                </td>
+                <td>
+                    <select class="form-control" id="levelSelect" placeholder="請選擇層級">
+                        <!-- 下拉選單會動態填充部門選項 -->
+                    </select>
+                </td>
+
+                <td>
+                    <button class="btn btn-primary" id="saveButton">儲存</button>
+                </td>
+            </tr>
+        
+        </tbody>
+    </table>
+</div>
+<script>
+    $(document).ready(function () {
+        $.ajax({
+            url: '/api/Department/Departments',  // 调用 API 获取部门数据
+            type: 'GET',
+            dataType: 'json',
+            success: function (departments) {
+
+                // 清空现有的下拉选项
+                $('#departmentSelect').empty();
+                $('#departmentSelect').append('<option value="">請選擇部門</option>');
+
+                // 填充部门数据到下拉菜单
+                departments.forEach(function(department) {
+                    $('#departmentSelect').append(
+                        `<option value="${department.departmentId}">${department.department}</option>`
+                    );
+                });
+            },
+            error: function (xhr, status, error) {
+                console.log("請求部門數據失敗：", error);
+            }
+        });
+    });
+    </script>
+    <script>
+    $(document).ready(function () {
+        $.ajax({
+            url: '/api/Department/Level',  // 调用 API 获取部门数据
+            type: 'GET',
+            dataType: 'json',
+            success: function (departments) {
+
+                // 清空现有的下拉选项
+                $('#levelSelect').empty();
+                $('#levelSelect').append('<option value="">請選擇層級</option>');
+
+                // 填充部门数据到下拉菜单
+                const uniqueLevels = new Set();
+
+            departments.forEach(function(department) {
+                if (!uniqueLevels.has(department.level)) {
+                    uniqueLevels.add(department.level); // 添加到 Set
+                    $('#levelSelect').append(
+                        `<option value="${department.departmentId}">${department.level}</option>`
+                    );
+                }
+            });
+            },
+            error: function (xhr, status, error) {
+                console.log("請求部門數據失敗：", error);
+            }
+        });
+    });
+
+    // 表单提交事件
+    $('#saveButton').click(function () {
+
+        const departmentName = $('#departmentName').val();
+        const departmentSelect = $('#departmentSelect').val();
+        const levelSelect = $('#levelSelect option:selected').text();
+
+                console.log("數據：", departmentName,departmentSelect,levelSelect);
+                if (!departmentName || !levelSelect) {
+                alert('名稱與層級必須填寫');
+                return;
+            }
+            const departmentData = {
+            department: departmentName,
+            ParentID: departmentSelect,
+            Level: levelSelect
+                                        };
+                // 向后端发送 POST 请求，保存员工数据
+                $.ajax({
+                    url: '/api/Department/AddDepartment',  //API
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(departmentData),
+                    success: function (response) {
+                        $('#message').text(response.message);
+                        alert('新增成功: ' + response.message);
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        var errorMessage = xhr.responseJSON ? xhr.responseJSON.message : '存檔失敗';
+                        $('#message').text(errorMessage);
+                        alert('新增失敗: ' + errorMessage);
+                    }
+                });
+            });
+</script>

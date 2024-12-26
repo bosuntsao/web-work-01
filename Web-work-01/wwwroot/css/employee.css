@@ -1,0 +1,26 @@
+﻿body {
+}
+
+.menu ul {
+    list-style: none; /* 移除預設的項目符號 */
+    padding: 0;
+    margin: 0;
+    display: flex; /* 使用 flexbox 來排列項目 */
+    gap: 20px; /* 設置每個項目之間的間距 */
+}
+
+    .menu ul li {
+        display: inline-block; /* 確保列表項目是內聯顯示 */
+    }
+
+        .menu ul li a {
+            text-decoration: none;  去除連結的下劃線 
+            color: #007BFF;  設置字體顏色 
+            font-size: 16px;  設置字體大小 
+            padding: 5px 10px;  增加內邊距，讓按鈕看起來更美觀 
+            transition: color 0.3s ease;  添加滑鼠懸停效果的過渡動畫 
+        }
+
+            .menu ul li a:hover {
+                color: #0056b3; /* 滑鼠懸停時的顏色變化 */
+            }
